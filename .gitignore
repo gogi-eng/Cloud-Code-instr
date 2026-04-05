@@ -1,0 +1,13 @@
+# Реальные ключи и секреты
+.env
+!.env.example
+
+# OpenClaw рабочая директория
+.openclaw/
+
+# Node.js
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
