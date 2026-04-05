@@ -1,0 +1,35 @@
+{
+  "identity": {
+    "name": "Clawd",
+    "theme": "helpful assistant",
+    "emoji": "🦞"
+  },
+  "agent": {
+    "workspace": "~/.openclaw/workspace",
+    "model": {
+      "primary": "anthropic/claude-sonnet-4-5",
+      "fallback": "openai/gpt-4o"
+    }
+  },
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "allowlist",
+      "allowFrom": ["+79001234567"],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      }
+    },
+    "telegram": {
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
+      "allowFrom": ["YOUR_TELEGRAM_USER_ID"],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      }
+    }
+  }
+}
