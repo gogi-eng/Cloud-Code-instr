@@ -143,7 +143,11 @@ nano ~/.openclaw/openclaw.json
 }
 ```
 
-### Полный конфиг (с Telegram + WhatsApp)
+### Конфиг с Telegram + WhatsApp
+
+> **Внимание:** Добавляйте секцию `telegram` **только после** того, как вы получили токен от @BotFather и записали `TELEGRAM_BOT_TOKEN` в `~/.openclaw/.env`. Если секция Telegram есть в конфиге, но переменная не задана, `openclaw doctor` будет выдавать повторяющиеся предупреждения «missing env var "TELEGRAM_BOT_TOKEN"».
+
+Готовый шаблон с Telegram: [`openclaw.telegram.example.json`](./openclaw.telegram.example.json)
 
 ```json
 {
@@ -183,6 +187,8 @@ nano ~/.openclaw/openclaw.json
 }
 ```
 
+> Используйте этот конфиг, только если `TELEGRAM_BOT_TOKEN` уже задан в `~/.openclaw/.env`.
+
 ---
 
 ## Шаг 6. Подключить мессенджер
@@ -201,8 +207,12 @@ nano ~/.openclaw/openclaw.json
    ```
    TELEGRAM_BOT_TOKEN=ваш_токен_от_botfather
    ```
-4. В конфиге укажите свой Telegram ID в `channels.telegram.allowFrom`.
-5. Перезапустите OpenClaw.
+4. **Только после этого** добавьте секцию `channels.telegram` в конфиг (или скопируйте [`openclaw.telegram.example.json`](./openclaw.telegram.example.json)):
+   ```bash
+   cp openclaw.telegram.example.json ~/.openclaw/openclaw.json
+   ```
+5. Укажите свой Telegram ID в `channels.telegram.allowFrom`.
+6. Перезапустите OpenClaw.
 
 ### Discord
 
@@ -267,6 +277,81 @@ chmod +x setup.sh
 - **API-ключи** храните только в `~/.openclaw/.env` с правами `chmod 600`.
 - **Никогда не коммитьте** `.env`-файл с реальными ключами.
 - В группах включайте `requireMention: true`, чтобы бот не отвечал на каждое сообщение.
+
+---
+
+## Устранение проблем (Troubleshooting)
+
+### Повторяющиеся предупреждения «missing env var "TELEGRAM_BOT_TOKEN"»
+
+Если при запуске `openclaw doctor` вы видите множество строк:
+
+```
+Config: missing env var "TELEGRAM_BOT_TOKEN" at telegram.botToken - feature using this value will be unavailable
+```
+
+**Причина:** В `~/.openclaw/openclaw.json` присутствует секция `channels.telegram` с `"botToken": "${TELEGRAM_BOT_TOKEN}"`, но переменная окружения `TELEGRAM_BOT_TOKEN` не задана. OpenClaw проверяет эту переменную при загрузке каждого плагина, из-за чего предупреждение повторяется многократно.
+
+**Решение (выберите одно из):**
+
+1. **Если Telegram вам не нужен** — удалите секцию `telegram` из конфига:
+   ```bash
+   cp openclaw.example.json ~/.openclaw/openclaw.json
+   ```
+   Шаблон `openclaw.example.json` не содержит Telegram-секции.
+
+2. **Если хотите подключить Telegram** — сначала задайте токен, потом добавьте секцию в конфиг:
+   ```bash
+   # Добавьте токен
+   echo 'TELEGRAM_BOT_TOKEN=ваш_токен' >> ~/.openclaw/.env
+   # Скопируйте конфиг с поддержкой Telegram
+   cp openclaw.telegram.example.json ~/.openclaw/openclaw.json
+   ```
+
+### Ошибка «Memory search is enabled, but no embedding provider is ready»
+
+OpenClaw по умолчанию включает семантический поиск по памяти (memory search), но для этого нужен провайдер эмбеддингов. Если вы не планируете использовать функцию запоминания, отключите её:
+
+```bash
+openclaw config set agents.defaults.memorySearch.enabled false
+```
+
+Если хотите использовать memory search, настройте один из провайдеров:
+
+| Провайдер | Переменная | Где получить |
+|-----------|-----------|-------------|
+| OpenAI | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com) |
+| Google | `GEMINI_API_KEY` или `GOOGLE_API_KEY` | [aistudio.google.com](https://aistudio.google.com) |
+| Voyage | `VOYAGE_API_KEY` | [voyageai.com](https://www.voyageai.com) |
+| Mistral | `MISTRAL_API_KEY` | [console.mistral.ai](https://console.mistral.ai) |
+
+Добавьте ключ в `~/.openclaw/.env`:
+
+```bash
+echo 'OPENAI_API_KEY=sk-...' >> ~/.openclaw/.env
+```
+
+Проверьте статус:
+
+```bash
+openclaw memory status --deep
+```
+
+### Общая диагностика
+
+```bash
+# Полная диагностика
+openclaw doctor
+
+# Проверка конфига
+openclaw config edit
+
+# Проверка памяти
+openclaw memory status --deep
+
+# Просмотр логов
+openclaw daemon logs
+```
 
 ---
 

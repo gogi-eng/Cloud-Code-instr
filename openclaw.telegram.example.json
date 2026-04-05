@@ -20,6 +20,16 @@
           "requireMention": true
         }
       }
+    },
+    "telegram": {
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
+      "allowFrom": ["YOUR_TELEGRAM_USER_ID"],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      }
     }
   }
 }

@@ -99,7 +99,51 @@ else
     warn "Файл .env уже существует: $OPENCLAW_DIR/.env (не перезаписываем)"
 fi
 
-# --- 5. Диагностика ---
+# --- 4b. Проверка конфига на неразрешённые переменные ---
+if [ -f "$OPENCLAW_DIR/openclaw.json" ]; then
+    if grep -q '\${TELEGRAM_BOT_TOKEN}' "$OPENCLAW_DIR/openclaw.json" 2>/dev/null; then
+        if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+            if [ -f "$OPENCLAW_DIR/.env" ]; then
+                # shellcheck disable=SC1091
+                set +u
+                source "$OPENCLAW_DIR/.env" 2>/dev/null || true
+                set -u
+            fi
+            if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+                warn "Конфиг содержит \${TELEGRAM_BOT_TOKEN}, но переменная не задана."
+                warn "Это вызовет повторяющиеся предупреждения при запуске."
+                read -rp "Удалить секцию Telegram из конфига? [Y/n] " REMOVE_TG
+                if [[ ! "$REMOVE_TG" =~ ^[Nn]$ ]]; then
+                    if [ -f "$SCRIPT_DIR/openclaw.example.json" ]; then
+                        cp "$SCRIPT_DIR/openclaw.example.json" "$OPENCLAW_DIR/openclaw.json"
+                        info "Конфиг заменён на версию без Telegram"
+                        info "Когда получите токен, скопируйте openclaw.telegram.example.json"
+                    fi
+                fi
+            fi
+        fi
+    fi
+fi
+
+# --- 5. Отключение memory search если нет ключей эмбеддинга ---
+HAS_EMBED_KEY=false
+for KEY_VAR in OPENAI_API_KEY GOOGLE_API_KEY GEMINI_API_KEY VOYAGE_API_KEY MISTRAL_API_KEY; do
+    if [ -n "${!KEY_VAR:-}" ]; then
+        HAS_EMBED_KEY=true
+        break
+    fi
+done
+
+if [ "$HAS_EMBED_KEY" = false ] && command -v openclaw &>/dev/null; then
+    warn "Не найдены ключи для провайдеров эмбеддингов (memory search)."
+    read -rp "Отключить memory search? (можно включить позже) [Y/n] " DISABLE_MEM
+    if [[ ! "$DISABLE_MEM" =~ ^[Nn]$ ]]; then
+        openclaw config set agents.defaults.memorySearch.enabled false 2>/dev/null || true
+        info "Memory search отключён"
+    fi
+fi
+
+# --- 6. Диагностика ---
 echo ""
 echo "========================================="
 echo "  Диагностика"
@@ -122,10 +166,15 @@ echo ""
 echo "2. Настройте конфиг под себя:"
 echo "   nano $OPENCLAW_DIR/openclaw.json"
 echo ""
-echo "3. Запустите мастер настройки:"
+echo "3. Для подключения Telegram:"
+echo "   - Получите токен от @BotFather"
+echo "   - Добавьте TELEGRAM_BOT_TOKEN в $OPENCLAW_DIR/.env"
+echo "   - cp openclaw.telegram.example.json $OPENCLAW_DIR/openclaw.json"
+echo ""
+echo "4. Запустите мастер настройки:"
 echo "   openclaw onboard --install-daemon"
 echo ""
-echo "4. Или запустите напрямую:"
+echo "5. Или запустите напрямую:"
 echo "   openclaw"
 echo ""
 info "Установка завершена!"
