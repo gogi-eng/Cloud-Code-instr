@@ -2,12 +2,12 @@
 .env
 !.env.example
 
-# OpenClaw рабочая директория
+# Рабочая директория OpenClaw
 .openclaw/
 
-# Node.js
+# Зависимости Node.js
 node_modules/
 
-# OS
+# Системные файлы ОС
 .DS_Store
 Thumbs.db

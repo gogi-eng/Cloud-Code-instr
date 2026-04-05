@@ -104,7 +104,7 @@ if [ -f "$OPENCLAW_DIR/openclaw.json" ]; then
     if grep -q '\${TELEGRAM_BOT_TOKEN}' "$OPENCLAW_DIR/openclaw.json" 2>/dev/null; then
         if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
             if [ -f "$OPENCLAW_DIR/.env" ]; then
-                # shellcheck disable=SC1091
+                # shellcheck disable=SC1091 — файл .env создаётся динамически
                 set +u
                 source "$OPENCLAW_DIR/.env" 2>/dev/null || true
                 set -u
