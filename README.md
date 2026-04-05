@@ -192,6 +192,102 @@ nano ~/.openclaw/openclaw.json
 
 ---
 
+## Шаг 5а. Выбор модели
+
+По умолчанию шаблон конфига использует `anthropic/claude-sonnet-4-5` как основную модель и `openai/gpt-4o` как запасную. Модель можно заменить на любую другую.
+
+### Способ 1. Через конфиг (постоянно)
+
+Откройте `~/.openclaw/openclaw.json` и измените секцию `agent.model`:
+
+```json
+{
+  "agent": {
+    "model": {
+      "primary": "провайдер/модель",
+      "fallback": "провайдер/запасная-модель"
+    }
+  }
+}
+```
+
+### Способ 2. Через CLI (постоянно)
+
+```bash
+# Задать основную модель
+openclaw config set agents.defaults.model.primary anthropic/claude-sonnet-4-5
+
+# Задать запасную модель
+openclaw config set agents.defaults.model.fallback openai/gpt-4o
+```
+
+### Способ 3. Через чат (на одну сессию)
+
+Во время разговора с агентом введите команду:
+
+```
+/model
+```
+
+Агент предложит выбрать модель из доступных. Выбор действует до конца текущей сессии.
+
+### Доступные модели
+
+| Провайдер | Примеры моделей | Переменная для API-ключа |
+|-----------|----------------|--------------------------|
+| Anthropic | `anthropic/claude-sonnet-4-5`, `anthropic/claude-opus-4-6`, `anthropic/claude-haiku-3-5` | `ANTHROPIC_API_KEY` |
+| OpenAI | `openai/gpt-4o`, `openai/gpt-4`, `openai/gpt-3.5-turbo` | `OPENAI_API_KEY` |
+| Google | `google/gemini-pro`, `google/gemini-flash` | `GOOGLE_API_KEY` |
+| DeepSeek | `deepseek/deepseek-chat`, `deepseek/deepseek-coder` | `DEEPSEEK_API_KEY` |
+| Ollama (локально) | `ollama/llama3`, `ollama/mistral`, `ollama/codellama` | Не нужен |
+
+> Формат: `провайдер/название-модели`. Полный список моделей: `openclaw models list`
+
+### Несколько запасных моделей
+
+Можно указать цепочку запасных моделей — если основная недоступна, OpenClaw пробует следующую по списку:
+
+```json
+{
+  "agent": {
+    "model": {
+      "primary": "anthropic/claude-sonnet-4-5",
+      "fallbacks": [
+        "openai/gpt-4o",
+        "deepseek/deepseek-chat"
+      ]
+    }
+  }
+}
+```
+
+### Локальные модели через Ollama
+
+Если хотите работать без облачных API (бесплатно, без ключей):
+
+1. Установите [Ollama](https://ollama.com):
+   ```bash
+   curl -fsSL https://ollama.com/install.sh | sh
+   ```
+2. Скачайте модель:
+   ```bash
+   ollama pull llama3
+   ```
+3. Укажите в конфиге:
+   ```json
+   {
+     "agent": {
+       "model": {
+         "primary": "ollama/llama3"
+       }
+     }
+   }
+   ```
+
+> После смены модели перезапустите OpenClaw: `openclaw daemon restart` или перезапустите терминал.
+
+---
+
 ## Шаг 5½. Хуки (hooks)
 
 При онбординге OpenClaw предлагает включить хуки — автоматизации, которые запускаются по событиям (старт gateway, новая сессия, получение сообщения и т.д.). Можно пропустить этот шаг и включить хуки позже.
